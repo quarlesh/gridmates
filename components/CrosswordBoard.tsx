@@ -4,6 +4,21 @@ import { useMemo, useRef, useState, useEffect } from "react";
 import { CrosswordPuzzle, Direction } from "../lib/puzzle/types";
 import { useMultiplayer } from "../lib/multiplayer/useMultiplayer";
 
+const PLAYER_COLORS = [
+  "var(--gridmates-player-1)",
+  "var(--gridmates-player-2)",
+  "var(--gridmates-player-3)",
+  "var(--gridmates-player-4)",
+  "var(--gridmates-player-5)",
+  "var(--gridmates-player-6)",
+  "var(--gridmates-player-7)",
+  "var(--gridmates-player-8)",
+] as const;
+
+function getPlayerColor(colorIndex: number) {
+  return PLAYER_COLORS[colorIndex % PLAYER_COLORS.length];
+}
+
 export default function CrosswordBoard({
   puzzle,
   roomId,
@@ -251,11 +266,16 @@ export default function CrosswordBoard({
                       onClick={() => selectCell(id)}
                       className={`relative flex items-center justify-center border border-zinc-400 text-[length:var(--letter-size)] font-semibold ${
                         active ? "bg-amber-100" : "bg-white"
-                      } ${
-                        selectedHere ? "ring-2 ring-inset ring-blue-500" : ""
                       } ${wrong ? "text-red-600" : "text-zinc-900"}`}
                       style={
-                        { "--letter-size": `${letterSize}px` } as React.CSSProperties
+                        {
+                          "--letter-size": `${letterSize}px`,
+                          boxShadow: selectedHere
+                            ? `inset 0 0 0 2px ${getPlayerColor(
+                                players.find((player) => player.id === playerId)?.color ?? 0,
+                              )}`
+                            : undefined,
+                        } as React.CSSProperties
                       }
                     >
                       {startingClue && (
@@ -275,7 +295,8 @@ export default function CrosswordBoard({
                             <span
                               key={player.id}
                               title={`${player.name}'s cursor`}
-                              className="h-2 w-2 rounded-full border border-white bg-blue-500"
+                              className="h-2 w-2 rounded-full border border-white"
+                              style={{ backgroundColor: getPlayerColor(player.color) }}
                             />
                           ))}
                         </span>
@@ -322,7 +343,10 @@ export default function CrosswordBoard({
               <div className="mt-2 space-y-1">
                 {players.map((player) => (
                   <div key={player.id} className="flex items-center gap-2 text-sm">
-                    <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: getPlayerColor(player.color) }}
+                    />
                     <span className="truncate">
                       {player.name}
                       {player.id === playerId ? " (you)" : ""}

@@ -80,7 +80,13 @@ wss.on("connection", (socket) => {
         room = getRoom(message.roomId);
         clientId = randomUUID();
 
-        const color = colors[room.clients.size % colors.length];
+        const usedColors = new Set(
+          [...room.clients.values()].map((client) => client.player.color),
+        );
+        const color =
+          colors.find((candidate) => !usedColors.has(candidate)) ??
+          colors[room.clients.size % colors.length];
+          console.log(color)
         const player: MultiplayerPlayer = {
           id: clientId,
           name: message.name.slice(0, 24) || "Player",

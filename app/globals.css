@@ -2,7 +2,36 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: light; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #f5f5f4; color: #18181b; font-family: Arial, Helvetica, sans-serif; }
-button, input { font: inherit; }
+:root {
+  color-scheme: light;
+
+  /*
+   * Multiplayer player colors are design tokens. The actual values come from
+   * Tailwind's color theme, so the UI never needs to know their hex/OKLCH
+   * values directly.
+   */
+  --gridmates-player-1: theme("colors.blue.500");
+  --gridmates-player-2: theme("colors.red.500");
+  --gridmates-player-3: theme("colors.green.500");
+  --gridmates-player-4: theme("colors.purple.500");
+  --gridmates-player-5: theme("colors.orange.500");
+  --gridmates-player-6: theme("colors.cyan.500");
+  --gridmates-player-7: theme("colors.pink.500");
+  --gridmates-player-8: theme("colors.yellow.500");
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f5f4;
+  color: #18181b;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}

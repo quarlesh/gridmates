@@ -584,6 +584,9 @@ video {
 .flex-1 {
   flex: 1 1 0%;
 }
+.shrink-0 {
+  flex-shrink: 0;
+}
 .flex-wrap {
   flex-wrap: wrap;
 }
@@ -669,10 +672,6 @@ video {
   --tw-bg-opacity: 1;
   background-color: rgb(254 243 199 / var(--tw-bg-opacity, 1));
 }
-.bg-blue-500 {
-  --tw-bg-opacity: 1;
-  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
-}
 .bg-emerald-100 {
   --tw-bg-opacity: 1;
   background-color: rgb(209 250 229 / var(--tw-bg-opacity, 1));
@@ -680,6 +679,30 @@ video {
 .bg-emerald-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(16 185 129 / var(--tw-bg-opacity, 1));
+}
+.bg-gridmates-player-1 {
+  background-color: var(--gridmates-player-1);
+}
+.bg-gridmates-player-2 {
+  background-color: var(--gridmates-player-2);
+}
+.bg-gridmates-player-3 {
+  background-color: var(--gridmates-player-3);
+}
+.bg-gridmates-player-4 {
+  background-color: var(--gridmates-player-4);
+}
+.bg-gridmates-player-5 {
+  background-color: var(--gridmates-player-5);
+}
+.bg-gridmates-player-6 {
+  background-color: var(--gridmates-player-6);
+}
+.bg-gridmates-player-7 {
+  background-color: var(--gridmates-player-7);
+}
+.bg-gridmates-player-8 {
+  background-color: var(--gridmates-player-8);
 }
 .bg-red-400 {
   --tw-bg-opacity: 1;
@@ -802,6 +825,11 @@ video {
   outline: 2px solid transparent;
   outline-offset: 2px;
 }
+.ring {
+  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+}
 .ring-2 {
   --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
   --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
@@ -810,32 +838,85 @@ video {
 .ring-inset {
   --tw-ring-inset: inset;
 }
-.ring-blue-500 {
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(59 130 246 / var(--tw-ring-opacity, 1));
+.ring-gridmates-player-1 {
+  --tw-ring-color: var(--gridmates-player-1);
+}
+.ring-gridmates-player-2 {
+  --tw-ring-color: var(--gridmates-player-2);
+}
+.ring-gridmates-player-3 {
+  --tw-ring-color: var(--gridmates-player-3);
+}
+.ring-gridmates-player-4 {
+  --tw-ring-color: var(--gridmates-player-4);
+}
+.ring-gridmates-player-5 {
+  --tw-ring-color: var(--gridmates-player-5);
+}
+.ring-gridmates-player-6 {
+  --tw-ring-color: var(--gridmates-player-6);
+}
+.ring-gridmates-player-7 {
+  --tw-ring-color: var(--gridmates-player-7);
+}
+.ring-gridmates-player-8 {
+  --tw-ring-color: var(--gridmates-player-8);
 }
 .filter {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
-:root { color-scheme: light; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #f5f5f4; color: #18181b; font-family: Arial, Helvetica, sans-serif; }
-button, input { font: inherit; }
+:root {
+  color-scheme: light;
+
+  /*
+   * Multiplayer player colors are design tokens. The actual values come from
+   * Tailwind's color theme, so the UI never needs to know their hex/OKLCH
+   * values directly.
+   */
+  --gridmates-player-1: #3b82f6;
+  --gridmates-player-2: #ef4444;
+  --gridmates-player-3: #22c55e;
+  --gridmates-player-4: #a855f7;
+  --gridmates-player-5: #f97316;
+  --gridmates-player-6: #06b6d4;
+  --gridmates-player-7: #ec4899;
+  --gridmates-player-8: #eab308;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f5f4;
+  color: #18181b;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
 .hover\:bg-zinc-100:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(244 244 245 / var(--tw-bg-opacity, 1));
 }
+
 .hover\:bg-zinc-50:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(250 250 250 / var(--tw-bg-opacity, 1));
 }
+
 @media (min-width: 640px) {
 
   .sm\:p-8 {
     padding: 2rem;
   }
 }
+
 @media (min-width: 1024px) {
 
   .lg\:grid-cols-\[minmax\(0\2c 700px\)_minmax\(280px\2c 1fr\)\] {
