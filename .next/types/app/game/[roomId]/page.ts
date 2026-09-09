@@ -1,4 +1,4 @@
-// File: /Users/hayleequarles/crossword-party-fixed5/app/game/[roomId]/page.tsx
+// File: /Users/hayleequarles/gridmates/app/game/[roomId]/page.tsx
 import * as entry from '../../../../../app/game/[roomId]/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
