@@ -1,11 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Direction } from "./protocol";
-import type { MultiplayerPlayer, MultiplayerMessage, ServerMessage } from "./protocol";
+import type {
+  MultiplayerPlayer,
+  MultiplayerMessage,
+  ServerMessage,
+} from "./protocol";
 
 type Options = {
   roomId: string;
   name?: string;
 };
+
+type ConnectionStatus =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "room-full"
+  | "error";
 
 const WS_URL =
   process.env.NEXT_PUBLIC_WS_URL ??
@@ -26,7 +37,8 @@ export function useMultiplayer({ roomId, name }: Options) {
   const [values, setValues] = useState<Record<string, string>>({});
   const [players, setPlayers] = useState<MultiplayerPlayer[]>([]);
   const [completed, setCompleted] = useState(false);
-  const [connected, setConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] =
+  useState<ConnectionStatus>("disconnected");
   const socketRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string | null>(null);
 
@@ -37,7 +49,7 @@ export function useMultiplayer({ roomId, name }: Options) {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      setConnected(true);
+      setConnectionStatus('connecting');
       const message: MultiplayerMessage = {
         type: "JOIN",
         roomId,
@@ -51,6 +63,7 @@ export function useMultiplayer({ roomId, name }: Options) {
 
       switch (message.type) {
         case "CONNECTED":
+          setConnectionStatus('connected')
           playerIdRef.current = message.playerId;
           setValues(message.state.values);
           setPlayers(message.state.players);
@@ -96,13 +109,24 @@ export function useMultiplayer({ roomId, name }: Options) {
           setCompleted(false);
           break;
         case "ERROR":
-          console.error(message.message);
+          if (message.message === "Room is full") {
+            setConnectionStatus("room-full");
+          } else {
+            setConnectionStatus("error");
+          }
           break;
       }
     };
 
-    socket.onclose = () => setConnected(false);
-    socket.onerror = () => setConnected(false);
+    socket.onclose = (event) => {
+  if (event.code === 4001) {
+    setConnectionStatus("room-full");
+    return;
+  }
+
+  setConnectionStatus("disconnected");
+};
+    socket.onerror = () => setConnectionStatus('disconnected');
 
     return () => {
       socket.close();
@@ -122,7 +146,7 @@ export function useMultiplayer({ roomId, name }: Options) {
       values,
       players,
       completed,
-      connected,
+      connectionStatus,
       playerId: playerIdRef.current,
       updateCell: (cellId: string, value: string | null) =>
         send({ type: "CELL_UPDATED", cellId, value }),
@@ -130,6 +154,6 @@ export function useMultiplayer({ roomId, name }: Options) {
         send({ type: "CELL_SELECTED", cellId, direction }),
       resetBoard: () => send({ type: "BOARD_RESET" }),
     }),
-    [values, players, completed, connected],
+    [values, players, completed, connectionStatus],
   );
 }

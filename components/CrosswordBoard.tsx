@@ -9,10 +9,6 @@ const PLAYER_COLORS = [
   "var(--gridmates-player-2)",
   "var(--gridmates-player-3)",
   "var(--gridmates-player-4)",
-  "var(--gridmates-player-5)",
-  "var(--gridmates-player-6)",
-  "var(--gridmates-player-7)",
-  "var(--gridmates-player-8)",
 ] as const;
 
 function getPlayerColor(colorIndex: number) {
@@ -35,7 +31,7 @@ export default function CrosswordBoard({
     values,
     players,
     completed,
-    connected,
+    connectionStatus,
     playerId,
     updateCell,
     selectCell: syncSelection,
@@ -194,201 +190,248 @@ export default function CrosswordBoard({
   const clueNumberSize = Math.max(7, Math.min(12, 180 / puzzle.width));
   const letterSize = Math.max(18, Math.min(30, 450 / puzzle.width));
 
-  return (
-    <main className="min-h-screen p-4 sm:p-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
-              <span className={`h-2 w-2 rounded-full ${connected ? "bg-emerald-500" : "bg-red-400"}`} />
-              Crossword Party · Room {roomId}
-            </div>
-            <h1 className="mt-1 text-3xl font-bold tracking-tight">{puzzle.title}</h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              {puzzle.author}
-              {puzzle.copyright ? ` · ${puzzle.copyright}` : ""}
-            </p>
-          </div>
+  if (connectionStatus === "room-full") {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+          <div className="mb-4 text-4xl">👥</div>
 
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowErrors((v) => !v)}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50"
-            >
-              {showErrors ? "Hide errors" : "Check errors"}
-            </button>
-            <button
-              onClick={resetBoard}
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50"
-            >
-              Clear
-            </button>
-          </div>
-        </header>
+          <h1 className="text-2xl font-semibold text-foreground">
+            Room is Full
+          </h1>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,700px)_minmax(280px,1fr)]">
-          <section>
-            <div
-              ref={boardRef}
-              tabIndex={0}
-              onKeyDown={handleKeyDown}
-              className="mx-auto max-w-[700px] outline-none"
-              style={{ containerType: "inline-size" }}
-              aria-label="Crossword board. Use your keyboard to enter letters."
-            >
-              <div
-                className="grid w-full border-2 border-zinc-900 bg-zinc-900"
-                style={{
-                  gridTemplateColumns: `repeat(${puzzle.width}, minmax(0, 1fr))`,
-                  gridTemplateRows: `repeat(${puzzle.height}, minmax(0, 1fr))`,
-                  aspectRatio: `${puzzle.width} / ${puzzle.height}`,
-                }}
-              >
-                {puzzle.cells.map((cell) => {
-                  const id = `${cell.row}-${cell.column}`;
-                  if (cell.isBlock) return <div key={id} className="bg-zinc-900" />;
+          <p className="mt-3 text-muted-foreground">
+            This crossword already has 4 players. You can't join until someone
+            leaves.
+          </p>
 
-                  const value = values[id] ?? "";
-                  const wrong = showErrors && value && value !== cell.answer;
-                  const active = activeCells.has(id);
-                  const selectedHere = selected === id;
-                  const remoteSelections = remotePlayers.filter(
-                    (player) => player.selected === id,
-                  );
-                  const startingClue = puzzle.clues.find(
-                    (c) => c.row === cell.row && c.column === cell.column,
-                  );
-
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => selectCell(id)}
-                      className={`relative flex items-center justify-center border border-zinc-400 text-[length:var(--letter-size)] font-semibold ${
-                        active ? "bg-amber-100" : "bg-white"
-                      } ${wrong ? "text-red-600" : "text-zinc-900"}`}
-                      style={
-                        {
-                          "--letter-size": `${letterSize}px`,
-                          boxShadow: selectedHere
-                            ? `inset 0 0 0 2px ${getPlayerColor(
-                                players.find((player) => player.id === playerId)?.color ?? 0,
-                              )}`
-                            : undefined,
-                        } as React.CSSProperties
-                      }
-                    >
-                      {startingClue && (
-                        <span
-                          className="absolute left-0.5 top-0.5 text-[length:var(--clue-number-size)] font-normal leading-none text-zinc-600"
-                          style={
-                            { "--clue-number-size": `${clueNumberSize}px` } as React.CSSProperties
-                          }
-                        >
-                          {startingClue.number}
-                        </span>
-                      )}
-
-                      {remoteSelections.length > 0 && (
-                        <span className="absolute bottom-0.5 right-0.5 flex gap-0.5">
-                          {remoteSelections.map((player) => (
-                            <span
-                              key={player.id}
-                              title={`${player.name}'s cursor`}
-                              className="h-2 w-2 rounded-full border border-white"
-                              style={{ backgroundColor: getPlayerColor(player.color) }}
-                            />
-                          ))}
-                        </span>
-                      )}
-
-                      {value}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-600">
-              <span>{filled} / {total} squares filled</span>
-              {solved && (
-                <span className="rounded-full bg-emerald-100 px-3 py-1 font-semibold text-emerald-800">
-                  🎉 Puzzle solved!
-                </span>
-              )}
-            </div>
-          </section>
-
-          <aside className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 rounded-lg bg-zinc-100 p-1">
-              <div className="flex gap-2">
-                {(["ACROSS", "DOWN"] as Direction[]).map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDirectionAndSync(d)}
-                    className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold ${
-                      direction === d ? "bg-white shadow-sm" : "text-zinc-500"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-4 rounded-lg bg-zinc-50 p-3">
-              <div className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                Players
-              </div>
-              <div className="mt-2 space-y-1">
-                {players.map((player) => (
-                  <div key={player.id} className="flex items-center gap-2 text-sm">
-                    <span
-                      className="h-2.5 w-2.5 shrink-0 rounded-full"
-                      style={{ backgroundColor: getPlayerColor(player.color) }}
-                    />
-                    <span className="truncate">
-                      {player.name}
-                      {player.id === playerId ? " (you)" : ""}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-3 rounded-lg bg-zinc-50 p-3">
-              <div className="text-xs font-bold uppercase tracking-wide text-zinc-500">
-                Current Clue
-              </div>
-              <div className="mt-1 font-semibold">
-                {activeClue
-                  ? `${activeClue.number}${activeClue.direction === "ACROSS" ? "A" : "D"} · ${activeClue.text}`
-                  : "Select a square"}
-              </div>
-            </div>
-
-            <div className="max-h-[60vh] space-y-1 overflow-auto pr-1">
-              {puzzle.clues
-                .filter((c) => c.direction === direction)
-                .map((clue) => (
-                  <button
-                    key={`${clue.direction}-${clue.number}`}
-                    onClick={() => selectClue(clue)}
-                    className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-100 ${
-                      activeClue?.number === clue.number &&
-                      activeClue.direction === clue.direction
-                        ? "bg-amber-100"
-                        : ""
-                    }`}
-                  >
-                    <span className="mr-2 font-bold">{clue.number}.</span>
-                    {clue.text}
-                  </button>
-                ))}
-            </div>
-          </aside>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.reload();
+            }}
+            className="mt-6 rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90"
+          >
+            Try Again
+          </button>
         </div>
       </div>
-    </main>
-  );
+    );
+  } else {
+    return (
+      <main className="min-h-screen p-4 sm:p-8">
+        <div className="mx-auto max-w-6xl">
+          <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-zinc-500">
+                <span
+                  className={`h-2 w-2 rounded-full ${connectionStatus === "connected" ? "bg-emerald-500" : connectionStatus === "connecting" ? "bg-yellow-500" : "bg-red-400"}`}
+                />
+                Gridmates · Room {roomId}
+              </div>
+              <h1 className="mt-1 text-3xl font-bold tracking-tight">
+                {puzzle.title}
+              </h1>
+              <p className="mt-1 text-sm text-zinc-500">
+                {puzzle.author}
+                {puzzle.copyright ? ` · ${puzzle.copyright}` : ""}
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowErrors((v) => !v)}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50"
+              >
+                {showErrors ? "Hide Errors" : "Check Errors"}
+              </button>
+              <button
+                onClick={resetBoard}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium hover:bg-zinc-50"
+              >
+                Clear
+              </button>
+            </div>
+          </header>
+
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,700px)_minmax(280px,1fr)]">
+            <section>
+              <div
+                ref={boardRef}
+                tabIndex={0}
+                onKeyDown={handleKeyDown}
+                className="mx-auto max-w-[700px] outline-none"
+                style={{ containerType: "inline-size" }}
+                aria-label="Crossword board. Use your keyboard to enter letters."
+              >
+                <div
+                  className="grid w-full border-2 border-zinc-900 bg-zinc-900"
+                  style={{
+                    gridTemplateColumns: `repeat(${puzzle.width}, minmax(0, 1fr))`,
+                    gridTemplateRows: `repeat(${puzzle.height}, minmax(0, 1fr))`,
+                    aspectRatio: `${puzzle.width} / ${puzzle.height}`,
+                  }}
+                >
+                  {puzzle.cells.map((cell) => {
+                    const id = `${cell.row}-${cell.column}`;
+                    if (cell.isBlock)
+                      return <div key={id} className="bg-zinc-900" />;
+
+                    const value = values[id] ?? "";
+                    const wrong = showErrors && value && value !== cell.answer;
+                    const active = activeCells.has(id);
+                    const selectedHere = selected === id;
+                    const remoteSelections = remotePlayers.filter(
+                      (player) => player.selected === id,
+                    );
+                    const startingClue = puzzle.clues.find(
+                      (c) => c.row === cell.row && c.column === cell.column,
+                    );
+
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => selectCell(id)}
+                        className={`relative flex items-center justify-center border border-zinc-400 text-[length:var(--letter-size)] font-semibold ${
+                          active ? "bg-amber-100" : "bg-white"
+                        } ${wrong ? "text-red-600" : "text-zinc-900"}`}
+                        style={
+                          {
+                            "--letter-size": `${letterSize}px`,
+                            boxShadow: selectedHere
+                              ? `inset 0 0 0 2px ${getPlayerColor(
+                                  players.find(
+                                    (player) => player.id === playerId,
+                                  )?.color ?? 0,
+                                )}`
+                              : undefined,
+                          } as React.CSSProperties
+                        }
+                      >
+                        {startingClue && (
+                          <span
+                            className="absolute left-0.5 top-0.5 text-[length:var(--clue-number-size)] font-normal leading-none text-zinc-600"
+                            style={
+                              {
+                                "--clue-number-size": `${clueNumberSize}px`,
+                              } as React.CSSProperties
+                            }
+                          >
+                            {startingClue.number}
+                          </span>
+                        )}
+
+                        {remoteSelections.length > 0 && (
+                          <span className="absolute bottom-0.5 right-0.5 flex gap-0.5">
+                            {remoteSelections.map((player) => (
+                              <span
+                                key={player.id}
+                                title={`${player.name}'s cursor`}
+                                className="h-2 w-2 rounded-full border border-white"
+                                style={{
+                                  backgroundColor: getPlayerColor(player.color),
+                                }}
+                              />
+                            ))}
+                          </span>
+                        )}
+
+                        {value}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-600">
+                <span>
+                  {filled} / {total} squares filled
+                </span>
+                {solved && (
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 font-semibold text-emerald-800">
+                    🎉 Puzzle solved!
+                  </span>
+                )}
+              </div>
+            </section>
+
+            <aside className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+              <div className="mb-4 rounded-lg bg-zinc-100 p-1">
+                <div className="flex gap-2">
+                  {(["ACROSS", "DOWN"] as Direction[]).map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDirectionAndSync(d)}
+                      className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold ${
+                        direction === d ? "bg-white shadow-sm" : "text-zinc-500"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-4 rounded-lg bg-zinc-50 p-3">
+                <div className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Players
+                </div>
+                <div className="mt-2 space-y-1">
+                  {players.map((player) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: getPlayerColor(player.color),
+                        }}
+                      />
+                      <span className="truncate">
+                        {player.name}
+                        {player.id === playerId ? " (you)" : ""}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mb-3 rounded-lg bg-zinc-50 p-3">
+                <div className="text-xs font-bold uppercase tracking-wide text-zinc-500">
+                  Current Clue
+                </div>
+                <div className="mt-1 font-semibold">
+                  {activeClue
+                    ? `${activeClue.number}${activeClue.direction === "ACROSS" ? "A" : "D"} · ${activeClue.text}`
+                    : "Select a square"}
+                </div>
+              </div>
+
+              <div className="max-h-[60vh] space-y-1 overflow-auto pr-1">
+                {puzzle.clues
+                  .filter((c) => c.direction === direction)
+                  .map((clue) => (
+                    <button
+                      key={`${clue.direction}-${clue.number}`}
+                      onClick={() => selectClue(clue)}
+                      className={`block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-zinc-100 ${
+                        activeClue?.number === clue.number &&
+                        activeClue.direction === clue.direction
+                          ? "bg-amber-100"
+                          : ""
+                      }`}
+                    >
+                      <span className="mr-2 font-bold">{clue.number}.</span>
+                      {clue.text}
+                    </button>
+                  ))}
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    );
+  }
 }
