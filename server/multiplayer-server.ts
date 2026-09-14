@@ -5,6 +5,7 @@ import type {
   MultiplayerMessage,
   MultiplayerPlayer,
 } from "../lib/multiplayer/protocol";
+import http from "node:http";
 
 type Puzzle = Awaited<ReturnType<typeof loadPuzzle>>;
 
@@ -18,6 +19,13 @@ type Room = {
   values: Record<string, string>;
   clients: Map<string, Client>;
 };
+
+const ALLOWED_ORIGINS = new Set(
+  (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
 const PORT = Number(process.env.PORT ?? 3001);
 const MAX_PLAYERS = 4;
@@ -367,8 +375,58 @@ function handleMessage(
  * ---------------------------------------------------------------------------
  */
 
+const httpServer = http.createServer((req, res) => {
+  if (req.url === "/health") {
+    res.writeHead(200, {
+      "Content-Type": "application/json",
+    });
+
+    res.end(
+      JSON.stringify({
+        status: "ok",
+      }),
+    );
+
+    return;
+  }
+
+  res.writeHead(404);
+  res.end();
+});
+
 const wss = new WebSocketServer({
-  port: PORT,
+  noServer: true,
+});
+
+httpServer.on("upgrade", (request, socket, head) => {
+  const origin = request.headers.origin;
+
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+    socket.write(
+      "HTTP/1.1 403 Forbidden\r\n" +
+      "Connection: close\r\n" +
+      "\r\n",
+    );
+
+    socket.destroy();
+
+    return;
+  }
+
+  wss.handleUpgrade(
+    request,
+    socket,
+    head,
+    (ws) => {
+      wss.emit("connection", ws, request);
+    },
+  );
+});
+
+httpServer.listen(PORT, () => {
+  console.log(
+    `Grid Mates server listening on port ${PORT}`,
+  );
 });
 
 wss.on("connection", (socket) => {

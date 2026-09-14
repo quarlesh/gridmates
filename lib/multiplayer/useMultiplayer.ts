@@ -38,18 +38,16 @@ export function useMultiplayer({ roomId, name }: Options) {
   const [players, setPlayers] = useState<MultiplayerPlayer[]>([]);
   const [completed, setCompleted] = useState(false);
   const [connectionStatus, setConnectionStatus] =
-  useState<ConnectionStatus>("disconnected");
+    useState<ConnectionStatus>("disconnected");
   const socketRef = useRef<WebSocket | null>(null);
   const playerIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!WS_URL) return;
-
-    const socket = new WebSocket(WS_URL);
+    const socket = new WebSocket(process.env.NEXT_PUBLIC_WS_URL!);
     socketRef.current = socket;
 
     socket.onopen = () => {
-      setConnectionStatus('connecting');
+      setConnectionStatus("connecting");
       const message: MultiplayerMessage = {
         type: "JOIN",
         roomId,
@@ -63,7 +61,7 @@ export function useMultiplayer({ roomId, name }: Options) {
 
       switch (message.type) {
         case "CONNECTED":
-          setConnectionStatus('connected')
+          setConnectionStatus("connected");
           playerIdRef.current = message.playerId;
           setValues(message.state.values);
           setPlayers(message.state.players);
@@ -119,14 +117,14 @@ export function useMultiplayer({ roomId, name }: Options) {
     };
 
     socket.onclose = (event) => {
-  if (event.code === 4001) {
-    setConnectionStatus("room-full");
-    return;
-  }
+      if (event.code === 4001) {
+        setConnectionStatus("room-full");
+        return;
+      }
 
-  setConnectionStatus("disconnected");
-};
-    socket.onerror = () => setConnectionStatus('disconnected');
+      setConnectionStatus("disconnected");
+    };
+    socket.onerror = () => setConnectionStatus("disconnected");
 
     return () => {
       socket.close();
