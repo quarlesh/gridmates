@@ -7,7 +7,7 @@
     "dev:multiplayer": "concurrently \"next dev\" \"tsx server/multiplayer-server.ts\"",
     "build": "next build",
     "start": "next start",
-    "start:multiplayer": "concurrently \"next start\" \"tsx server/multiplayer-server.ts\"",
+    "start:multiplayer": "tsx server/multiplayer-server.ts",
     "lint": "next lint"
   },
   "dependencies": {

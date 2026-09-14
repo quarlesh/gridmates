@@ -19,7 +19,7 @@ type Room = {
   clients: Map<string, Client>;
 };
 
-const PORT = Number(process.env.WS_PORT ?? 3001);
+const PORT = Number(process.env.PORT ?? 3001);
 const MAX_PLAYERS = 4;
 
 const PLAYER_COLORS = [0, 1, 2, 3] as const;
