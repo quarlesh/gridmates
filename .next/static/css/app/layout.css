@@ -854,10 +854,10 @@ video {
   --gridmates-player-2: #ef4444;
   --gridmates-player-3: #22c55e;
   --gridmates-player-4: #eab308;
-  --gridmates-player-5: #f97316;
-  --gridmates-player-6: #06b6d4;
-  --gridmates-player-7: #ec4899;
-  --gridmates-player-8: #a855f7;
+  /* --gridmates-player-5: theme("colors.orange.500");
+  --gridmates-player-6: theme("colors.cyan.500");
+  --gridmates-player-7: theme("colors.pink.500");
+  --gridmates-player-8: theme("colors.purple.500"); */
 }
 
 * {
